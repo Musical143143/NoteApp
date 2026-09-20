@@ -40,7 +40,6 @@ public class EditorActivity extends Activity {
     private EditText tagsEdit;
 
     private TextView countText;
-    private TextView attachmentText;
 
     private long noteId = -1;
     private String attachmentUri = "";
@@ -48,56 +47,56 @@ public class EditorActivity extends Activity {
     private static final int PICK_FILE = 501;
 
     // =========================================================
-    // LIQUID GLASS COLORS
+    // COLORS
     // =========================================================
 
     private static final int BG =
             Color.rgb(1, 5, 14);
 
-    private static final int GLASS =
-            Color.rgb(8, 24, 48);
+    private static final int GLASS_1 =
+            Color.rgb(7, 28, 58);
 
-    private static final int GLASS_DARK =
-            Color.rgb(4, 16, 34);
+    private static final int GLASS_2 =
+            Color.rgb(7, 18, 39);
 
-    private static final int GLASS_BLUE =
-            Color.rgb(9, 31, 61);
+    private static final int GLASS_3 =
+            Color.rgb(22, 11, 50);
+
+    private static final int INNER =
+            Color.rgb(5, 17, 36);
 
     private static final int BLUE =
-            Color.rgb(50, 130, 255);
+            Color.rgb(48, 128, 255);
 
     private static final int BLUE_LIGHT =
-            Color.rgb(83, 166, 255);
+            Color.rgb(92, 170, 255);
 
     private static final int PURPLE =
-            Color.rgb(124, 54, 255);
+            Color.rgb(119, 48, 255);
 
     private static final int PURPLE_LIGHT =
-            Color.rgb(174, 85, 255);
+            Color.rgb(174, 91, 255);
 
     private static final int WHITE =
-            Color.rgb(247, 250, 255);
+            Color.rgb(248, 250, 255);
 
     private static final int TEXT =
-            Color.rgb(210, 221, 247);
+            Color.rgb(211, 222, 247);
 
     private static final int MUTED =
-            Color.rgb(137, 158, 202);
-
-    private static final int BORDER =
-            Color.rgb(45, 104, 215);
+            Color.rgb(137, 157, 202);
 
     // =========================================================
     // DP
     // =========================================================
 
-    private int dp(float v) {
+    private int dp(float value) {
         return (int) (
-                v *
+                value *
                 getResources()
                         .getDisplayMetrics()
                         .density
-                + .5f
+                + 0.5f
         );
     }
 
@@ -106,8 +105,8 @@ public class EditorActivity extends Activity {
     // =========================================================
 
     @Override
-    protected void onCreate(Bundle state) {
-        super.onCreate(state);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
@@ -132,31 +131,8 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // DRAWABLES
+    // GLASS
     // =========================================================
-
-    private GradientDrawable glass(
-            int color,
-            int radius,
-            int stroke
-    ) {
-
-        GradientDrawable g =
-                new GradientDrawable();
-
-        g.setColor(color);
-
-        g.setCornerRadius(
-                dp(radius)
-        );
-
-        g.setStroke(
-                dp(1),
-                stroke
-        );
-
-        return g;
-    }
 
     private GradientDrawable liquidGlass(
             int radius
@@ -167,9 +143,9 @@ public class EditorActivity extends Activity {
                         GradientDrawable.Orientation
                                 .LEFT_RIGHT,
                         new int[]{
-                                Color.rgb(7, 30, 62),
-                                Color.rgb(10, 19, 44),
-                                Color.rgb(24, 13, 54)
+                                GLASS_1,
+                                GLASS_2,
+                                GLASS_3
                         }
                 );
 
@@ -185,15 +161,36 @@ public class EditorActivity extends Activity {
         return g;
     }
 
-    private GradientDrawable saveGradient() {
+    private GradientDrawable innerGlass(
+            int radius
+    ) {
+
+        GradientDrawable g =
+                new GradientDrawable();
+
+        g.setColor(INNER);
+
+        g.setCornerRadius(
+                dp(radius)
+        );
+
+        g.setStroke(
+                dp(1),
+                Color.rgb(38, 94, 194)
+        );
+
+        return g;
+    }
+
+    private GradientDrawable saveBackground() {
 
         GradientDrawable g =
                 new GradientDrawable(
                         GradientDrawable.Orientation
                                 .LEFT_RIGHT,
                         new int[]{
-                                BLUE,
-                                PURPLE
+                                Color.rgb(63, 132, 255),
+                                Color.rgb(119, 45, 255)
                         }
                 );
 
@@ -208,7 +205,7 @@ public class EditorActivity extends Activity {
     // TEXT
     // =========================================================
 
-    private TextView txt(
+    private TextView text(
             String value,
             float size,
             int color
@@ -228,18 +225,18 @@ public class EditorActivity extends Activity {
     // BOUNCE
     // =========================================================
 
-    private void bounce(View v) {
+    private void bounce(View view) {
 
-        v.setOnTouchListener(
-                (view, event) -> {
+        view.setOnTouchListener(
+                (v, event) -> {
 
                     if (event.getAction() ==
                             MotionEvent.ACTION_DOWN) {
 
-                        view.animate()
+                        v.animate()
                                 .scaleX(.95f)
                                 .scaleY(.95f)
-                                .setDuration(70)
+                                .setDuration(60)
                                 .start();
 
                     } else if (
@@ -248,10 +245,10 @@ public class EditorActivity extends Activity {
                             event.getAction() ==
                                     MotionEvent.ACTION_CANCEL) {
 
-                        view.animate()
+                        v.animate()
                                 .scaleX(1f)
                                 .scaleY(1f)
-                                .setDuration(130)
+                                .setDuration(120)
                                 .start();
                     }
 
@@ -261,7 +258,7 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // MAIN LAYOUT
+    // MAIN UI
     // =========================================================
 
     private void buildUI() {
@@ -269,11 +266,12 @@ public class EditorActivity extends Activity {
         /*
          * IMPORTANT:
          *
-         * NO outer ScrollView.
+         * There is NO outer ScrollView.
          *
-         * The screen itself stays fixed.
+         * The whole editor stays fixed.
          *
-         * ONLY bodyScroll scrolls.
+         * ONLY bodyScroll inside the writing
+         * card is scrollable.
          */
 
         screen =
@@ -292,9 +290,9 @@ public class EditorActivity extends Activity {
 
         main.setPadding(
                 dp(28),
-                dp(5),
+                dp(4),
                 dp(28),
-                dp(8)
+                dp(6)
         );
 
         main.setBackgroundColor(BG);
@@ -310,21 +308,21 @@ public class EditorActivity extends Activity {
         screen.setOnApplyWindowInsetsListener(
                 (v, insets) -> {
 
-                    android.graphics.Insets top =
+                    android.graphics.Insets status =
                             insets.getInsets(
                                     WindowInsets.Type.statusBars()
                             );
 
-                    android.graphics.Insets bottom =
+                    android.graphics.Insets nav =
                             insets.getInsets(
                                     WindowInsets.Type.navigationBars()
                             );
 
                     main.setPadding(
                             dp(28),
-                            top.top + dp(5),
+                            status.top + dp(4),
                             dp(28),
-                            bottom.bottom + dp(8)
+                            nav.bottom + dp(6)
                     );
 
                     return insets;
@@ -335,7 +333,7 @@ public class EditorActivity extends Activity {
         buildTitle();
         buildActionBar();
         buildFormatBar();
-        buildWritingArea();
+        buildWritingCard();
         buildFolderTags();
     }
 
@@ -363,7 +361,7 @@ public class EditorActivity extends Activity {
                 );
 
         hp.bottomMargin =
-                dp(12);
+                dp(10);
 
         main.addView(
                 header,
@@ -372,7 +370,7 @@ public class EditorActivity extends Activity {
 
         // BACK
         TextView back =
-                txt(
+                text(
                         "‹",
                         40,
                         WHITE
@@ -386,15 +384,15 @@ public class EditorActivity extends Activity {
                 liquidGlass(28)
         );
 
-        LinearLayout.LayoutParams bp =
+        LinearLayout.LayoutParams backLp =
                 new LinearLayout.LayoutParams(
-                        dp(86),
-                        dp(64)
+                        dp(88),
+                        dp(62)
                 );
 
         header.addView(
                 back,
-                bp
+                backLp
         );
 
         bounce(back);
@@ -410,31 +408,9 @@ public class EditorActivity extends Activity {
                 }
         );
 
-        // CENTER
-        LinearLayout heading =
-                new LinearLayout(this);
-
-        heading.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        heading.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        TextView icon =
-                txt(
-                        "▤",
-                        24,
-                        BLUE_LIGHT
-                );
-
-        icon.setVisibility(
-                View.GONE
-        );
-
-        TextView title =
-                txt(
+        // CENTER TITLE
+        TextView headerTitle =
+                text(
                         noteId == -1
                                 ? "New note"
                                 : "Edit note",
@@ -442,47 +418,25 @@ public class EditorActivity extends Activity {
                         TEXT
                 );
 
-        TextView subtitle =
-                txt(
-                        "Write your thoughts",
-                        14,
-                        MUTED
-                );
-
-        heading.addView(
-                title,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(29)
-                )
+        headerTitle.setGravity(
+                Gravity.CENTER
         );
 
-        heading.addView(
-                subtitle,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(24)
-                )
-        );
-
-        LinearLayout.LayoutParams hp2 =
+        LinearLayout.LayoutParams titleLp =
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
                 );
 
-        hp2.leftMargin =
-                dp(12);
-
         header.addView(
-                heading,
-                hp2
+                headerTitle,
+                titleLp
         );
 
         // SAVE
         TextView save =
-                txt(
+                text(
                         "Save",
                         20,
                         WHITE
@@ -498,18 +452,18 @@ public class EditorActivity extends Activity {
         );
 
         save.setBackground(
-                saveGradient()
+                saveBackground()
         );
 
-        LinearLayout.LayoutParams sp =
+        LinearLayout.LayoutParams saveLp =
                 new LinearLayout.LayoutParams(
-                        dp(132),
-                        dp(64)
+                        dp(130),
+                        dp(62)
                 );
 
         header.addView(
                 save,
-                sp
+                saveLp
         );
 
         bounce(save);
@@ -535,20 +489,20 @@ public class EditorActivity extends Activity {
         LinearLayout.LayoutParams cp =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(126)
+                        dp(122)
                 );
 
         cp.bottomMargin =
-                dp(16);
+                dp(14);
 
         main.addView(
                 card,
                 cp
         );
 
-        // ICON CIRCLE
+        // PENCIL
         TextView pencil =
-                txt(
+                text(
                         "✎",
                         30,
                         BLUE_LIGHT
@@ -559,32 +513,28 @@ public class EditorActivity extends Activity {
         );
 
         pencil.setBackground(
-                glass(
-                        Color.rgb(8, 40, 78),
-                        40,
-                        BORDER
-                )
+                innerGlass(40)
         );
 
-        FrameLayout.LayoutParams pp =
+        FrameLayout.LayoutParams pencilLp =
                 new FrameLayout.LayoutParams(
-                        dp(64),
-                        dp(64)
+                        dp(62),
+                        dp(62)
                 );
 
-        pp.gravity =
+        pencilLp.gravity =
                 Gravity.LEFT |
                 Gravity.CENTER_VERTICAL;
 
-        pp.leftMargin =
+        pencilLp.leftMargin =
                 dp(16);
 
         card.addView(
                 pencil,
-                pp
+                pencilLp
         );
 
-        // TITLE EDIT
+        // TITLE
         titleEdit =
                 new EditText(this);
 
@@ -593,7 +543,7 @@ public class EditorActivity extends Activity {
         );
 
         titleEdit.setTextSize(
-                27
+                28
         );
 
         titleEdit.setTextColor(
@@ -660,63 +610,63 @@ public class EditorActivity extends Activity {
                 liquidGlass(30)
         );
 
-        LinearLayout.LayoutParams bp =
+        LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(76)
+                        dp(74)
                 );
 
-        bp.bottomMargin =
-                dp(12);
+        lp.bottomMargin =
+                dp(10);
 
         main.addView(
                 bar,
-                bp
+                lp
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "•",
-                23,
+                22,
                 v -> insertAtCursor("• ")
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "1.",
                 18,
                 v -> insertAtCursor("1. ")
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "□",
                 21,
                 v -> insertAtCursor("☐ ")
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "↶",
                 22,
                 v -> undo()
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "↷",
                 22,
                 v -> redo()
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "⌕",
                 23,
                 v -> chooseAttachment()
         );
 
-        actionButton(
+        addAction(
                 bar,
                 "↗",
                 25,
@@ -724,7 +674,7 @@ public class EditorActivity extends Activity {
         );
     }
 
-    private void actionButton(
+    private void addAction(
             LinearLayout parent,
             String value,
             float size,
@@ -732,7 +682,7 @@ public class EditorActivity extends Activity {
     ) {
 
         TextView button =
-                txt(
+                text(
                         value,
                         size,
                         WHITE
@@ -748,29 +698,25 @@ public class EditorActivity extends Activity {
         );
 
         button.setBackground(
-                glass(
-                        GLASS_DARK,
-                        23,
-                        BORDER
-                )
+                innerGlass(23)
         );
 
-        LinearLayout.LayoutParams p =
+        LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         0,
-                        dp(64),
+                        dp(62),
                         1
                 );
 
-        p.leftMargin =
+        lp.leftMargin =
                 dp(2);
 
-        p.rightMargin =
+        lp.rightMargin =
                 dp(2);
 
         parent.addView(
                 button,
-                p
+                lp
         );
 
         bounce(button);
@@ -808,67 +754,71 @@ public class EditorActivity extends Activity {
                 liquidGlass(30)
         );
 
-        LinearLayout.LayoutParams bp =
+        LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(76)
+                        dp(74)
                 );
 
-        bp.bottomMargin =
-                dp(14);
+        lp.bottomMargin =
+                dp(12);
 
         main.addView(
                 bar,
-                bp
+                lp
         );
 
-        formatButton(
+        addFormat(
                 bar,
                 "B",
+                22,
                 v -> applyStyle(
                         Typeface.BOLD
                 )
         );
 
-        formatButton(
+        addFormat(
                 bar,
                 "I",
+                22,
                 v -> applyStyle(
                         Typeface.ITALIC
                 )
         );
 
-        formatButton(
+        addFormat(
                 bar,
                 "U",
+                22,
                 v -> applyUnderline()
         );
 
-        formatButton(
+        addFormat(
                 bar,
                 "S",
+                22,
                 v -> applyStrike()
         );
 
-        formatButton(
+        addFormat(
                 bar,
                 "H1",
+                18,
                 v -> insertAtCursor("# ")
         );
     }
 
-    private void formatButton(
+    private void addFormat(
             LinearLayout parent,
             String value,
+            float size,
             View.OnClickListener listener
     ) {
 
         TextView button =
-                txt(
+                text(
                         value,
-                        value.equals("H1")
-                                ? 18
-                                : 22,
+                        size,
                         WHITE
                 );
 
@@ -882,29 +832,25 @@ public class EditorActivity extends Activity {
         );
 
         button.setBackground(
-                glass(
-                        GLASS_DARK,
-                        23,
-                        BORDER
-                )
+                innerGlass(23)
         );
 
-        LinearLayout.LayoutParams p =
+        LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(
                         0,
-                        dp(64),
+                        dp(62),
                         1
                 );
 
-        p.leftMargin =
+        lp.leftMargin =
                 dp(3);
 
-        p.rightMargin =
+        lp.rightMargin =
                 dp(3);
 
         parent.addView(
                 button,
-                p
+                lp
         );
 
         bounce(button);
@@ -915,19 +861,26 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // WRITING AREA
+    // WRITING CARD
     // =========================================================
 
-    private void buildWritingArea() {
+    private void buildWritingCard() {
 
-        FrameLayout writingCard =
+        FrameLayout card =
                 new FrameLayout(this);
 
-        writingCard.setBackground(
+        card.setBackground(
                 liquidGlass(40)
         );
 
-        LinearLayout.LayoutParams wp =
+        /*
+         * The writing card takes the remaining
+         * available screen height.
+         *
+         * Folder and Tags stay visible.
+         */
+
+        LinearLayout.LayoutParams cardLp =
                 new LinearLayout.LayoutParams(
                         -1,
                         0,
@@ -935,28 +888,28 @@ public class EditorActivity extends Activity {
                 );
 
         main.addView(
-                writingCard,
-                wp
+                card,
+                cardLp
         );
 
-        /*
-         * TOP AREA
-         */
+        // -----------------------------------------------------
+        // WRITING HEADER
+        // -----------------------------------------------------
 
-        LinearLayout writingHeader =
+        LinearLayout top =
                 new LinearLayout(this);
 
-        writingHeader.setOrientation(
+        top.setOrientation(
                 LinearLayout.HORIZONTAL
         );
 
-        writingHeader.setGravity(
+        top.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
         // DOCUMENT ICON
         TextView document =
-                txt(
+                text(
                         "▤",
                         28,
                         BLUE_LIGHT
@@ -967,85 +920,79 @@ public class EditorActivity extends Activity {
         );
 
         document.setBackground(
-                glass(
-                        Color.rgb(8, 40, 78),
-                        35,
-                        BORDER
-                )
+                innerGlass(38)
         );
 
-        LinearLayout.LayoutParams dp1 =
+        top.addView(
+                document,
                 new LinearLayout.LayoutParams(
                         dp(58),
                         dp(58)
-                );
-
-        writingHeader.addView(
-                document,
-                dp1
+                )
         );
 
-        LinearLayout heading =
+        // HEADER TEXT
+        LinearLayout labels =
                 new LinearLayout(this);
 
-        heading.setOrientation(
+        labels.setOrientation(
                 LinearLayout.VERTICAL
         );
 
-        heading.setGravity(
+        labels.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
-        TextView hint =
-                txt(
+        TextView start =
+                text(
                         "Start writing...",
                         20,
-                        TEXT
+                        WHITE
                 );
 
-        TextView sub =
-                txt(
+        TextView capture =
+                text(
                         "Capture your ideas...",
                         14,
                         MUTED
                 );
 
-        heading.addView(
-                hint,
+        labels.addView(
+                start,
                 new LinearLayout.LayoutParams(
                         -1,
                         dp(29)
                 )
         );
 
-        heading.addView(
-                sub,
+        labels.addView(
+                capture,
                 new LinearLayout.LayoutParams(
                         -1,
                         dp(23)
                 )
         );
 
-        LinearLayout.LayoutParams hp =
+        LinearLayout.LayoutParams labelsLp =
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
                 );
 
-        hp.leftMargin =
+        labelsLp.leftMargin =
                 dp(12);
 
-        writingHeader.addView(
-                heading,
-                hp
+        top.addView(
+                labels,
+                labelsLp
         );
 
         // EXPAND
         TextView expand =
-                txt(
+                text(
                         "⛶",
-                        26,
+                        27,
                         WHITE
                 );
 
@@ -1054,45 +1001,38 @@ public class EditorActivity extends Activity {
         );
 
         expand.setBackground(
-                glass(
-                        Color.rgb(8, 38, 74),
-                        35,
-                        BORDER
-                )
+                innerGlass(38)
         );
 
-        LinearLayout.LayoutParams ep =
+        top.addView(
+                expand,
                 new LinearLayout.LayoutParams(
                         dp(58),
                         dp(58)
-                );
-
-        writingHeader.addView(
-                expand,
-                ep
+                )
         );
 
-        FrameLayout.LayoutParams whp =
+        FrameLayout.LayoutParams topLp =
                 new FrameLayout.LayoutParams(
                         -1,
-                        dp(76)
+                        dp(72)
                 );
 
-        whp.gravity =
+        topLp.gravity =
                 Gravity.TOP;
 
-        whp.leftMargin =
+        topLp.leftMargin =
                 dp(16);
 
-        whp.rightMargin =
+        topLp.rightMargin =
                 dp(16);
 
-        whp.topMargin =
-                dp(16);
+        topLp.topMargin =
+                dp(15);
 
-        writingCard.addView(
-                writingHeader,
-                whp
+        card.addView(
+                top,
+                topLp
         );
 
         bounce(expand);
@@ -1109,6 +1049,7 @@ public class EditorActivity extends Activity {
                                     );
 
                     if (imm != null) {
+
                         imm.showSoftInput(
                                 bodyEdit,
                                 InputMethodManager
@@ -1118,14 +1059,16 @@ public class EditorActivity extends Activity {
                 }
         );
 
-        /*
-         * ONLY THIS AREA SCROLLS
-         */
+        // -----------------------------------------------------
+        // BODY SCROLL
+        // -----------------------------------------------------
 
         ScrollView bodyScroll =
                 new ScrollView(this);
 
-        bodyScroll.setFillViewport(true);
+        bodyScroll.setFillViewport(
+                false
+        );
 
         bodyScroll.setVerticalScrollBarEnabled(
                 true
@@ -1163,15 +1106,11 @@ public class EditorActivity extends Activity {
                 Gravity.LEFT
         );
 
-        bodyEdit.setHint(
-                ""
-        );
-
         bodyEdit.setPadding(
-                dp(20),
+                dp(18),
                 dp(8),
-                dp(22),
-                dp(40)
+                dp(20),
+                dp(30)
         );
 
         bodyEdit.setInputType(
@@ -1192,69 +1131,129 @@ public class EditorActivity extends Activity {
                 )
         );
 
-        FrameLayout.LayoutParams bsp =
+        FrameLayout.LayoutParams bodyLp =
                 new FrameLayout.LayoutParams(
                         -1,
                         -1
                 );
 
-        bsp.leftMargin =
+        bodyLp.gravity =
+                Gravity.TOP;
+
+        bodyLp.leftMargin =
                 dp(20);
 
-        bsp.rightMargin =
-                dp(12);
+        bodyLp.rightMargin =
+                dp(10);
 
-        bsp.topMargin =
-                dp(88);
+        bodyLp.topMargin =
+                dp(86);
 
-        bsp.bottomMargin =
-                dp(70);
+        bodyLp.bottomMargin =
+                dp(62);
 
-        writingCard.addView(
+        card.addView(
                 bodyScroll,
-                bsp
+                bodyLp
         );
 
-        /*
-         * BOTTOM BAR
-         */
+        // -----------------------------------------------------
+        // BOTTOM GLASS FOOTER
+        // -----------------------------------------------------
 
-        LinearLayout bottom =
+        LinearLayout footer =
                 new LinearLayout(this);
 
-        bottom.setOrientation(
+        footer.setOrientation(
                 LinearLayout.HORIZONTAL
         );
 
-        bottom.setGravity(
+        footer.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
-        TextView markdown =
-                txt(
-                        "▣  Markdown supported",
-                        14,
-                        MUTED
-                );
+        // MARKDOWN
+        LinearLayout markdown =
+                new LinearLayout(this);
+
+        markdown.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
 
         markdown.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
-        LinearLayout.LayoutParams mp =
+        TextView mdIcon =
+                text(
+                        "▣",
+                        19,
+                        BLUE_LIGHT
+                );
+
+        mdIcon.setGravity(
+                Gravity.CENTER
+        );
+
+        markdown.addView(
+                mdIcon,
+                new LinearLayout.LayoutParams(
+                        dp(32),
+                        -1
+                )
+        );
+
+        TextView mdText =
+                text(
+                        "Markdown\nsupported",
+                        14,
+                        MUTED
+                );
+
+        mdText.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        markdown.addView(
+                mdText,
+                new LinearLayout.LayoutParams(
+                        dp(116),
+                        -1
+                )
+        );
+
+        footer.addView(
+                markdown,
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
-                );
-
-        bottom.addView(
-                markdown,
-                mp
+                )
         );
 
+        // DIVIDER
+        View divider =
+                new View(this);
+
+        divider.setBackgroundColor(
+                Color.rgb(
+                        38,
+                        91,
+                        178
+                )
+        );
+
+        footer.addView(
+                divider,
+                new LinearLayout.LayoutParams(
+                        dp(1),
+                        dp(35)
+                )
+        );
+
+        // COUNT
         countText =
-                txt(
+                text(
                         "0 words  •  0 characters",
                         14,
                         MUTED
@@ -1264,7 +1263,7 @@ public class EditorActivity extends Activity {
                 Gravity.CENTER
         );
 
-        bottom.addView(
+        footer.addView(
                 countText,
                 new LinearLayout.LayoutParams(
                         dp(180),
@@ -1272,28 +1271,32 @@ public class EditorActivity extends Activity {
                 )
         );
 
-        FrameLayout.LayoutParams bp =
+        FrameLayout.LayoutParams footerLp =
                 new FrameLayout.LayoutParams(
                         -1,
-                        dp(58)
+                        dp(56)
                 );
 
-        bp.gravity =
+        footerLp.gravity =
                 Gravity.BOTTOM;
 
-        bp.leftMargin =
+        footerLp.leftMargin =
                 dp(18);
 
-        bp.rightMargin =
+        footerLp.rightMargin =
                 dp(12);
 
-        bp.bottomMargin =
+        footerLp.bottomMargin =
                 dp(8);
 
-        writingCard.addView(
-                bottom,
-                bp
+        card.addView(
+                footer,
+                footerLp
         );
+
+        // -----------------------------------------------------
+        // COUNTER WATCHER
+        // -----------------------------------------------------
 
         bodyEdit.addTextChangedListener(
                 new TextWatcher() {
@@ -1352,66 +1355,66 @@ public class EditorActivity extends Activity {
                 Gravity.CENTER
         );
 
-        LinearLayout.LayoutParams rp =
+        LinearLayout.LayoutParams rowLp =
                 new LinearLayout.LayoutParams(
                         -1,
                         dp(94)
                 );
 
-        rp.topMargin =
-                dp(14);
+        rowLp.topMargin =
+                dp(12);
 
         main.addView(
                 row,
-                rp
+                rowLp
         );
 
         LinearLayout folder =
-                metadata(
+                metadataCard(
                         "📁",
                         "Folder",
                         false
                 );
 
         LinearLayout tags =
-                metadata(
+                metadataCard(
                         "◇",
                         "Tags",
                         true
                 );
 
-        LinearLayout.LayoutParams fp =
+        LinearLayout.LayoutParams folderLp =
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
                 );
 
-        fp.rightMargin =
+        folderLp.rightMargin =
                 dp(6);
 
         row.addView(
                 folder,
-                fp
+                folderLp
         );
 
-        LinearLayout.LayoutParams tp =
+        LinearLayout.LayoutParams tagsLp =
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
                 );
 
-        tp.leftMargin =
+        tagsLp.leftMargin =
                 dp(6);
 
         row.addView(
                 tags,
-                tp
+                tagsLp
         );
     }
 
-    private LinearLayout metadata(
+    private LinearLayout metadataCard(
             String icon,
             String hint,
             boolean purple
@@ -1429,7 +1432,7 @@ public class EditorActivity extends Activity {
         );
 
         card.setPadding(
-                dp(12),
+                dp(10),
                 0,
                 dp(7),
                 0
@@ -1440,9 +1443,9 @@ public class EditorActivity extends Activity {
         );
 
         TextView iconView =
-                txt(
+                text(
                         icon,
-                        21,
+                        22,
                         purple
                                 ? PURPLE_LIGHT
                                 : WHITE
@@ -1455,7 +1458,7 @@ public class EditorActivity extends Activity {
         card.addView(
                 iconView,
                 new LinearLayout.LayoutParams(
-                        dp(34),
+                        dp(38),
                         -1
                 )
         );
@@ -1468,7 +1471,7 @@ public class EditorActivity extends Activity {
         );
 
         edit.setTextSize(
-                14
+                15
         );
 
         edit.setTextColor(
@@ -1488,7 +1491,7 @@ public class EditorActivity extends Activity {
         );
 
         edit.setPadding(
-                dp(3),
+                dp(2),
                 0,
                 0,
                 0
@@ -1514,9 +1517,9 @@ public class EditorActivity extends Activity {
         );
 
         TextView arrow =
-                txt(
+                text(
                         "›",
-                        28,
+                        29,
                         WHITE
                 );
 
@@ -1527,7 +1530,7 @@ public class EditorActivity extends Activity {
         card.addView(
                 arrow,
                 new LinearLayout.LayoutParams(
-                        dp(25),
+                        dp(27),
                         -1
                 )
         );
@@ -1560,51 +1563,50 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // LOAD
+    // LOAD NOTE
     // =========================================================
 
     private void loadNote() {
 
-        Note n =
+        Note note =
                 db.get(noteId);
 
-        if (n == null) {
+        if (note == null) {
             return;
         }
 
         titleEdit.setText(
-                n.title
+                note.title
         );
 
-        if (n.body != null &&
-                !n.body.isEmpty()) {
+        if (note.body != null &&
+                !note.body.isEmpty()) {
 
             bodyEdit.setText(
                     Html.fromHtml(
-                            n.body,
+                            note.body,
                             Html.FROM_HTML_MODE_LEGACY
                     )
             );
         }
 
         folderEdit.setText(
-                n.folder == null
+                note.folder == null
                         ? ""
-                        : n.folder
+                        : note.folder
         );
 
         tagsEdit.setText(
-                n.tags == null
+                note.tags == null
                         ? ""
-                        : n.tags
+                        : note.tags
         );
 
         attachmentUri =
-                n.attachment == null
+                note.attachment == null
                         ? ""
-                        : n.attachment;
+                        : note.attachment;
 
-        updateAttachment();
         updateCount();
     }
 
@@ -1795,7 +1797,7 @@ public class EditorActivity extends Activity {
                         .toString()
                         .trim();
 
-        int chars =
+        int characters =
                 value.length();
 
         int words =
@@ -1808,7 +1810,7 @@ public class EditorActivity extends Activity {
         countText.setText(
                 words +
                 " words  •  " +
-                chars +
+                characters +
                 " characters"
         );
     }
@@ -2004,20 +2006,11 @@ public class EditorActivity extends Activity {
             } catch (Exception ignored) {
             }
 
-            updateAttachment();
-        }
-    }
-
-    private void updateAttachment() {
-
-        if (attachmentText == null) {
-            return;
-        }
-
-        if (attachmentUri == null ||
-                attachmentUri.isEmpty()) {
-
-            return;
+            Toast.makeText(
+                    this,
+                    "Attachment added",
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 
@@ -2059,5 +2052,19 @@ public class EditorActivity extends Activity {
                         "Share note"
                 )
         );
+    }
+
+    // =========================================================
+    // BACK
+    // =========================================================
+
+    @Override
+    public void onBackPressed() {
+
+        if (hasContent()) {
+            save();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
