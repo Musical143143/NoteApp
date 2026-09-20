@@ -1,28 +1,27 @@
 package com.rayan.noteapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.Html;
+import android.text.InputType;
 import android.text.Spannable;
-import android.text.Spanned;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -32,8 +31,8 @@ public class EditorActivity extends Activity {
 
     private NotesDB db;
 
-    private FrameLayout frame;
-    private LinearLayout root;
+    private FrameLayout screen;
+    private LinearLayout main;
 
     private EditText titleEdit;
     private EditText bodyEdit;
@@ -44,59 +43,61 @@ public class EditorActivity extends Activity {
     private TextView attachmentText;
 
     private long noteId = -1;
-
     private String attachmentUri = "";
 
     private static final int PICK_FILE = 501;
 
     // =========================================================
-    // COLORS
+    // LIQUID GLASS COLORS
     // =========================================================
 
     private static final int BG =
-            Color.rgb(3, 7, 16);
+            Color.rgb(1, 5, 14);
 
     private static final int GLASS =
-            Color.rgb(15, 24, 43);
+            Color.rgb(8, 24, 48);
 
-    private static final int GLASS_2 =
-            Color.rgb(18, 29, 52);
+    private static final int GLASS_DARK =
+            Color.rgb(4, 16, 34);
 
-    private static final int GLASS_3 =
-            Color.rgb(20, 34, 61);
-
-    private static final int BORDER =
-            Color.rgb(61, 86, 145);
-
-    private static final int BORDER_BRIGHT =
-            Color.rgb(91, 137, 225);
-
-    private static final int WHITE =
-            Color.rgb(248, 250, 255);
-
-    private static final int MUTED =
-            Color.rgb(153, 166, 200);
-
-    private static final int LIGHT =
-            Color.rgb(184, 198, 239);
+    private static final int GLASS_BLUE =
+            Color.rgb(9, 31, 61);
 
     private static final int BLUE =
-            Color.rgb(66, 133, 255);
+            Color.rgb(50, 130, 255);
+
+    private static final int BLUE_LIGHT =
+            Color.rgb(83, 166, 255);
 
     private static final int PURPLE =
-            Color.rgb(117, 67, 255);
+            Color.rgb(124, 54, 255);
 
-    private static final int CYAN =
-            Color.rgb(83, 215, 255);
+    private static final int PURPLE_LIGHT =
+            Color.rgb(174, 85, 255);
 
-    private int dp(float value) {
+    private static final int WHITE =
+            Color.rgb(247, 250, 255);
 
+    private static final int TEXT =
+            Color.rgb(210, 221, 247);
+
+    private static final int MUTED =
+            Color.rgb(137, 158, 202);
+
+    private static final int BORDER =
+            Color.rgb(45, 104, 215);
+
+    // =========================================================
+    // DP
+    // =========================================================
+
+    private int dp(float v) {
         return (int) (
-                value *
-                        getResources()
-                                .getDisplayMetrics()
-                                .density
-                        + 0.5f
+                v *
+                getResources()
+                        .getDisplayMetrics()
+                        .density
+                + .5f
         );
     }
 
@@ -105,26 +106,20 @@ public class EditorActivity extends Activity {
     // =========================================================
 
     @Override
-    protected void onCreate(
-            Bundle savedInstanceState
-    ) {
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
 
-        super.onCreate(savedInstanceState);
-
-        WindowInsetsFix();
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
 
         db = new NotesDB(this);
 
-        if (
-                getIntent().hasExtra("note_id")
-        ) {
-
-            noteId =
-                    getIntent()
-                            .getLongExtra(
-                                    "note_id",
-                                    -1
-                            );
+        if (getIntent().hasExtra("note_id")) {
+            noteId = getIntent()
+                    .getLongExtra(
+                            "note_id",
+                            -1
+                    );
         }
 
         buildUI();
@@ -137,178 +132,275 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // WINDOW
+    // DRAWABLES
     // =========================================================
 
-    private void WindowInsetsFix() {
+    private GradientDrawable glass(
+            int color,
+            int radius,
+            int stroke
+    ) {
 
-        getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
+        GradientDrawable g =
+                new GradientDrawable();
 
-        if (Build.VERSION.SDK_INT >= 30) {
+        g.setColor(color);
 
-            getWindow()
-                    .setDecorFitsSystemWindows(false);
-        }
+        g.setCornerRadius(
+                dp(radius)
+        );
+
+        g.setStroke(
+                dp(1),
+                stroke
+        );
+
+        return g;
+    }
+
+    private GradientDrawable liquidGlass(
+            int radius
+    ) {
+
+        GradientDrawable g =
+                new GradientDrawable(
+                        GradientDrawable.Orientation
+                                .LEFT_RIGHT,
+                        new int[]{
+                                Color.rgb(7, 30, 62),
+                                Color.rgb(10, 19, 44),
+                                Color.rgb(24, 13, 54)
+                        }
+                );
+
+        g.setCornerRadius(
+                dp(radius)
+        );
+
+        g.setStroke(
+                dp(1),
+                BLUE
+        );
+
+        return g;
+    }
+
+    private GradientDrawable saveGradient() {
+
+        GradientDrawable g =
+                new GradientDrawable(
+                        GradientDrawable.Orientation
+                                .LEFT_RIGHT,
+                        new int[]{
+                                BLUE,
+                                PURPLE
+                        }
+                );
+
+        g.setCornerRadius(
+                dp(32)
+        );
+
+        return g;
     }
 
     // =========================================================
-    // MAIN UI
+    // TEXT
+    // =========================================================
+
+    private TextView txt(
+            String value,
+            float size,
+            int color
+    ) {
+
+        TextView t =
+                new TextView(this);
+
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
+
+        return t;
+    }
+
+    // =========================================================
+    // BOUNCE
+    // =========================================================
+
+    private void bounce(View v) {
+
+        v.setOnTouchListener(
+                (view, event) -> {
+
+                    if (event.getAction() ==
+                            MotionEvent.ACTION_DOWN) {
+
+                        view.animate()
+                                .scaleX(.95f)
+                                .scaleY(.95f)
+                                .setDuration(70)
+                                .start();
+
+                    } else if (
+                            event.getAction() ==
+                                    MotionEvent.ACTION_UP ||
+                            event.getAction() ==
+                                    MotionEvent.ACTION_CANCEL) {
+
+                        view.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(130)
+                                .start();
+                    }
+
+                    return false;
+                }
+        );
+    }
+
+    // =========================================================
+    // MAIN LAYOUT
     // =========================================================
 
     private void buildUI() {
 
-        frame =
+        /*
+         * IMPORTANT:
+         *
+         * NO outer ScrollView.
+         *
+         * The screen itself stays fixed.
+         *
+         * ONLY bodyScroll scrolls.
+         */
+
+        screen =
                 new FrameLayout(this);
 
-        frame.setBackgroundColor(BG);
+        screen.setBackgroundColor(BG);
 
-        setContentView(frame);
+        setContentView(screen);
 
-        ScrollView scroll =
-                new ScrollView(this);
+        main =
+                new LinearLayout(this);
 
-        scroll.setFillViewport(true);
+        main.setOrientation(
+                LinearLayout.VERTICAL
+        );
 
-        scroll.setClipToPadding(false);
+        main.setPadding(
+                dp(28),
+                dp(5),
+                dp(28),
+                dp(8)
+        );
 
-        scroll.setVerticalScrollBarEnabled(false);
+        main.setBackgroundColor(BG);
 
-        frame.addView(
-                scroll,
+        screen.addView(
+                main,
                 new FrameLayout.LayoutParams(
                         -1,
                         -1
                 )
         );
 
-        root =
-                new LinearLayout(this);
-
-        root.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        root.setPadding(
-                dp(16),
-                dp(12),
-                dp(16),
-                dp(18)
-        );
-
-        scroll.addView(
-                root,
-                new ScrollView.LayoutParams(
-                        -1,
-                        -2
-                )
-        );
-
-        root.setOnApplyWindowInsetsListener(
+        screen.setOnApplyWindowInsetsListener(
                 (v, insets) -> {
 
-                    int top = 0;
-                    int bottom = 0;
+                    android.graphics.Insets top =
+                            insets.getInsets(
+                                    WindowInsets.Type.statusBars()
+                            );
 
-                    if (Build.VERSION.SDK_INT >= 30) {
+                    android.graphics.Insets bottom =
+                            insets.getInsets(
+                                    WindowInsets.Type.navigationBars()
+                            );
 
-                        android.graphics.Insets bars =
-                                insets.getInsets(
-                                        WindowInsets.Type.statusBars()
-                                                | WindowInsets.Type.displayCutout()
-                                                | WindowInsets.Type.navigationBars()
-                                );
-
-                        top = bars.top;
-                        bottom = bars.bottom;
-                    }
-
-                    root.setPadding(
-                            dp(16),
-                            top + dp(8),
-                            dp(16),
-                            bottom + dp(18)
+                    main.setPadding(
+                            dp(28),
+                            top.top + dp(5),
+                            dp(28),
+                            bottom.bottom + dp(8)
                     );
 
                     return insets;
                 }
         );
 
-        buildTopBar();
-
-        space(8);
-
-        buildTitleCard();
-
-        space(12);
-
-        buildActionToolbar();
-
-        space(10);
-
-        buildFormatToolbar();
-
-        space(12);
-
-        buildBodyCard();
-
-        space(12);
-
-        buildMetadata();
-
-        space(8);
-
-        buildCounter();
-
-        buildAttachment();
+        buildHeader();
+        buildTitle();
+        buildActionBar();
+        buildFormatBar();
+        buildWritingArea();
+        buildFolderTags();
     }
 
     // =========================================================
-    // TOP BAR
+    // HEADER
     // =========================================================
 
-    private void buildTopBar() {
+    private void buildHeader() {
 
-        LinearLayout bar =
+        LinearLayout header =
                 new LinearLayout(this);
 
-        bar.setOrientation(
+        header.setOrientation(
                 LinearLayout.HORIZONTAL
         );
 
-        bar.setGravity(
+        header.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
-        root.addView(
-                bar,
+        LinearLayout.LayoutParams hp =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(66)
-                )
+                        dp(68)
+                );
+
+        hp.bottomMargin =
+                dp(12);
+
+        main.addView(
+                header,
+                hp
         );
 
+        // BACK
         TextView back =
-                glassButton(
+                txt(
                         "‹",
-                        36
+                        40,
+                        WHITE
                 );
 
-        LinearLayout.LayoutParams backLp =
-                new LinearLayout.LayoutParams(
-                        dp(58),
-                        dp(58)
-                );
-
-        bar.addView(
-                back,
-                backLp
+        back.setGravity(
+                Gravity.CENTER
         );
+
+        back.setBackground(
+                liquidGlass(28)
+        );
+
+        LinearLayout.LayoutParams bp =
+                new LinearLayout.LayoutParams(
+                        dp(86),
+                        dp(64)
+                );
+
+        header.addView(
+                back,
+                bp
+        );
+
+        bounce(back);
 
         back.setOnClickListener(
                 v -> {
-
-                    bounce(v);
 
                     if (hasContent()) {
                         save();
@@ -318,70 +410,181 @@ public class EditorActivity extends Activity {
                 }
         );
 
+        // CENTER
+        LinearLayout heading =
+                new LinearLayout(this);
+
+        heading.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        heading.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        TextView icon =
+                txt(
+                        "▤",
+                        24,
+                        BLUE_LIGHT
+                );
+
+        icon.setVisibility(
+                View.GONE
+        );
+
         TextView title =
-                label(
+                txt(
                         noteId == -1
                                 ? "New note"
                                 : "Edit note",
-                        19,
+                        21,
+                        TEXT
+                );
+
+        TextView subtitle =
+                txt(
+                        "Write your thoughts",
+                        14,
                         MUTED
                 );
 
-        title.setGravity(
-                Gravity.CENTER
+        heading.addView(
+                title,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(29)
+                )
         );
 
-        LinearLayout.LayoutParams titleLp =
+        heading.addView(
+                subtitle,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(24)
+                )
+        );
+
+        LinearLayout.LayoutParams hp2 =
                 new LinearLayout.LayoutParams(
                         0,
                         -1,
                         1
                 );
 
-        bar.addView(
-                title,
-                titleLp
+        hp2.leftMargin =
+                dp(12);
+
+        header.addView(
+                heading,
+                hp2
         );
 
+        // SAVE
         TextView save =
-                gradientButton(
+                txt(
                         "Save",
-                        17
+                        20,
+                        WHITE
                 );
 
-        LinearLayout.LayoutParams saveLp =
-                new LinearLayout.LayoutParams(
-                        dp(108),
-                        dp(58)
-                );
-
-        bar.addView(
-                save,
-                saveLp
+        save.setGravity(
+                Gravity.CENTER
         );
+
+        save.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        save.setBackground(
+                saveGradient()
+        );
+
+        LinearLayout.LayoutParams sp =
+                new LinearLayout.LayoutParams(
+                        dp(132),
+                        dp(64)
+                );
+
+        header.addView(
+                save,
+                sp
+        );
+
+        bounce(save);
 
         save.setOnClickListener(
-                v -> {
-
-                    bounce(v);
-
-                    save();
-                }
+                v -> save()
         );
     }
 
     // =========================================================
-    // TITLE GLASS CARD
+    // TITLE CARD
     // =========================================================
 
-    private void buildTitleCard() {
+    private void buildTitle() {
 
-        LinearLayout card =
-                glassCard(
-                        GLASS_2,
-                        27
+        FrameLayout card =
+                new FrameLayout(this);
+
+        card.setBackground(
+                liquidGlass(34)
+        );
+
+        LinearLayout.LayoutParams cp =
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(126)
                 );
 
+        cp.bottomMargin =
+                dp(16);
+
+        main.addView(
+                card,
+                cp
+        );
+
+        // ICON CIRCLE
+        TextView pencil =
+                txt(
+                        "✎",
+                        30,
+                        BLUE_LIGHT
+                );
+
+        pencil.setGravity(
+                Gravity.CENTER
+        );
+
+        pencil.setBackground(
+                glass(
+                        Color.rgb(8, 40, 78),
+                        40,
+                        BORDER
+                )
+        );
+
+        FrameLayout.LayoutParams pp =
+                new FrameLayout.LayoutParams(
+                        dp(64),
+                        dp(64)
+                );
+
+        pp.gravity =
+                Gravity.LEFT |
+                Gravity.CENTER_VERTICAL;
+
+        pp.leftMargin =
+                dp(16);
+
+        card.addView(
+                pencil,
+                pp
+        );
+
+        // TITLE EDIT
         titleEdit =
                 new EditText(this);
 
@@ -389,26 +592,30 @@ public class EditorActivity extends Activity {
                 "Title"
         );
 
-        titleEdit.setTextSize(31);
+        titleEdit.setTextSize(
+                27
+        );
 
         titleEdit.setTextColor(
                 WHITE
         );
 
         titleEdit.setHintTextColor(
-                Color.rgb(119, 132, 170)
+                MUTED
         );
 
-        titleEdit.setSingleLine(true);
+        titleEdit.setSingleLine(
+                true
+        );
 
         titleEdit.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
         titleEdit.setPadding(
-                dp(18),
+                dp(94),
                 0,
-                dp(18),
+                dp(20),
                 0
         );
 
@@ -418,305 +625,674 @@ public class EditorActivity extends Activity {
 
         card.addView(
                 titleEdit,
-                new LinearLayout.LayoutParams(
+                new FrameLayout.LayoutParams(
                         -1,
-                        dp(86)
-                )
-        );
-
-        root.addView(
-                card,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(92)
+                        -1
                 )
         );
     }
 
     // =========================================================
-    // FIRST TOOLBAR
+    // ACTION BAR
     // =========================================================
 
-    private void buildActionToolbar() {
+    private void buildActionBar() {
 
-        LinearLayout card =
-                glassCard(
-                        GLASS,
-                        28
-                );
-
-        HorizontalScrollView scroll =
-                new HorizontalScrollView(this);
-
-        scroll.setHorizontalScrollBarEnabled(
-                false
-        );
-
-        scroll.setOverScrollMode(
-                View.OVER_SCROLL_NEVER
-        );
-
-        LinearLayout tools =
+        LinearLayout bar =
                 new LinearLayout(this);
 
-        tools.setOrientation(
+        bar.setOrientation(
                 LinearLayout.HORIZONTAL
         );
 
-        tools.setGravity(
-                Gravity.CENTER_VERTICAL
+        bar.setGravity(
+                Gravity.CENTER
         );
 
-        tools.setPadding(
-                dp(9),
-                dp(8),
-                dp(9),
-                dp(8)
+        bar.setPadding(
+                dp(5),
+                dp(5),
+                dp(5),
+                dp(5)
         );
 
-        scroll.addView(
-                tools,
-                new HorizontalScrollView.LayoutParams(
-                        -2,
-                        -1
-                )
+        bar.setBackground(
+                liquidGlass(30)
         );
 
-        addTool(
-                tools,
+        LinearLayout.LayoutParams bp =
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(76)
+                );
+
+        bp.bottomMargin =
+                dp(12);
+
+        main.addView(
+                bar,
+                bp
+        );
+
+        actionButton(
+                bar,
                 "•",
-                19,
+                23,
                 v -> insertAtCursor("• ")
         );
 
-        addTool(
-                tools,
+        actionButton(
+                bar,
                 "1.",
                 18,
                 v -> insertAtCursor("1. ")
         );
 
-        addTool(
-                tools,
+        actionButton(
+                bar,
                 "□",
-                20,
+                21,
                 v -> insertAtCursor("☐ ")
         );
 
-        addTool(
-                tools,
+        actionButton(
+                bar,
                 "↶",
                 22,
                 v -> undo()
         );
 
-        addTool(
-                tools,
+        actionButton(
+                bar,
                 "↷",
                 22,
                 v -> redo()
         );
 
-        addTool(
-                tools,
-                "📎",
-                21,
+        actionButton(
+                bar,
+                "⌕",
+                23,
                 v -> chooseAttachment()
         );
 
-        addTool(
-                tools,
+        actionButton(
+                bar,
                 "↗",
-                22,
+                25,
                 v -> shareNote()
         );
+    }
 
-        card.addView(
-                scroll,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(78)
+    private void actionButton(
+            LinearLayout parent,
+            String value,
+            float size,
+            View.OnClickListener listener
+    ) {
+
+        TextView button =
+                txt(
+                        value,
+                        size,
+                        WHITE
+                );
+
+        button.setGravity(
+                Gravity.CENTER
+        );
+
+        button.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        button.setBackground(
+                glass(
+                        GLASS_DARK,
+                        23,
+                        BORDER
                 )
         );
 
-        root.addView(
-                card,
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
-                        -1,
-                        dp(78)
-                )
+                        0,
+                        dp(64),
+                        1
+                );
+
+        p.leftMargin =
+                dp(2);
+
+        p.rightMargin =
+                dp(2);
+
+        parent.addView(
+                button,
+                p
+        );
+
+        bounce(button);
+
+        button.setOnClickListener(
+                listener
         );
     }
 
     // =========================================================
-    // SECOND TOOLBAR
+    // FORMAT BAR
     // =========================================================
 
-    private void buildFormatToolbar() {
+    private void buildFormatBar() {
 
-        LinearLayout card =
-                glassCard(
-                        GLASS,
-                        28
-                );
-
-        HorizontalScrollView scroll =
-                new HorizontalScrollView(this);
-
-        scroll.setHorizontalScrollBarEnabled(
-                false
-        );
-
-        scroll.setOverScrollMode(
-                View.OVER_SCROLL_NEVER
-        );
-
-        LinearLayout tools =
+        LinearLayout bar =
                 new LinearLayout(this);
 
-        tools.setOrientation(
+        bar.setOrientation(
                 LinearLayout.HORIZONTAL
         );
 
-        tools.setGravity(
+        bar.setGravity(
                 Gravity.CENTER
         );
 
-        tools.setPadding(
-                dp(9),
-                dp(8),
-                dp(9),
-                dp(8)
+        bar.setPadding(
+                dp(5),
+                dp(5),
+                dp(5),
+                dp(5)
         );
 
-        scroll.addView(
-                tools,
-                new HorizontalScrollView.LayoutParams(
-                        -2,
-                        -1
-                )
+        bar.setBackground(
+                liquidGlass(30)
         );
 
-        addTool(
-                tools,
+        LinearLayout.LayoutParams bp =
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(76)
+                );
+
+        bp.bottomMargin =
+                dp(14);
+
+        main.addView(
+                bar,
+                bp
+        );
+
+        formatButton(
+                bar,
                 "B",
-                19,
                 v -> applyStyle(
                         Typeface.BOLD
                 )
         );
 
-        addTool(
-                tools,
+        formatButton(
+                bar,
                 "I",
-                19,
                 v -> applyStyle(
                         Typeface.ITALIC
                 )
         );
 
-        addTool(
-                tools,
+        formatButton(
+                bar,
                 "U",
-                19,
                 v -> applyUnderline()
         );
 
-        addTool(
-                tools,
+        formatButton(
+                bar,
                 "S",
-                19,
                 v -> applyStrike()
         );
 
-        addTool(
-                tools,
+        formatButton(
+                bar,
                 "H1",
-                17,
                 v -> insertAtCursor("# ")
         );
+    }
 
-        card.addView(
-                scroll,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(78)
+    private void formatButton(
+            LinearLayout parent,
+            String value,
+            View.OnClickListener listener
+    ) {
+
+        TextView button =
+                txt(
+                        value,
+                        value.equals("H1")
+                                ? 18
+                                : 22,
+                        WHITE
+                );
+
+        button.setGravity(
+                Gravity.CENTER
+        );
+
+        button.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
+
+        button.setBackground(
+                glass(
+                        GLASS_DARK,
+                        23,
+                        BORDER
                 )
         );
 
-        root.addView(
-                card,
+        LinearLayout.LayoutParams p =
                 new LinearLayout.LayoutParams(
-                        -1,
-                        dp(78)
-                )
+                        0,
+                        dp(64),
+                        1
+                );
+
+        p.leftMargin =
+                dp(3);
+
+        p.rightMargin =
+                dp(3);
+
+        parent.addView(
+                button,
+                p
+        );
+
+        bounce(button);
+
+        button.setOnClickListener(
+                listener
         );
     }
 
     // =========================================================
-    // BODY GLASS CARD
+    // WRITING AREA
     // =========================================================
 
-    private void buildBodyCard() {
+    private void buildWritingArea() {
 
-        LinearLayout card =
-                glassCard(
-                        Color.rgb(8, 15, 29),
-                        30
+        FrameLayout writingCard =
+                new FrameLayout(this);
+
+        writingCard.setBackground(
+                liquidGlass(40)
+        );
+
+        LinearLayout.LayoutParams wp =
+                new LinearLayout.LayoutParams(
+                        -1,
+                        0,
+                        1
                 );
+
+        main.addView(
+                writingCard,
+                wp
+        );
+
+        /*
+         * TOP AREA
+         */
+
+        LinearLayout writingHeader =
+                new LinearLayout(this);
+
+        writingHeader.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        writingHeader.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        // DOCUMENT ICON
+        TextView document =
+                txt(
+                        "▤",
+                        28,
+                        BLUE_LIGHT
+                );
+
+        document.setGravity(
+                Gravity.CENTER
+        );
+
+        document.setBackground(
+                glass(
+                        Color.rgb(8, 40, 78),
+                        35,
+                        BORDER
+                )
+        );
+
+        LinearLayout.LayoutParams dp1 =
+                new LinearLayout.LayoutParams(
+                        dp(58),
+                        dp(58)
+                );
+
+        writingHeader.addView(
+                document,
+                dp1
+        );
+
+        LinearLayout heading =
+                new LinearLayout(this);
+
+        heading.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        heading.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        TextView hint =
+                txt(
+                        "Start writing...",
+                        20,
+                        TEXT
+                );
+
+        TextView sub =
+                txt(
+                        "Capture your ideas...",
+                        14,
+                        MUTED
+                );
+
+        heading.addView(
+                hint,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(29)
+                )
+        );
+
+        heading.addView(
+                sub,
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(23)
+                )
+        );
+
+        LinearLayout.LayoutParams hp =
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                );
+
+        hp.leftMargin =
+                dp(12);
+
+        writingHeader.addView(
+                heading,
+                hp
+        );
+
+        // EXPAND
+        TextView expand =
+                txt(
+                        "⛶",
+                        26,
+                        WHITE
+                );
+
+        expand.setGravity(
+                Gravity.CENTER
+        );
+
+        expand.setBackground(
+                glass(
+                        Color.rgb(8, 38, 74),
+                        35,
+                        BORDER
+                )
+        );
+
+        LinearLayout.LayoutParams ep =
+                new LinearLayout.LayoutParams(
+                        dp(58),
+                        dp(58)
+                );
+
+        writingHeader.addView(
+                expand,
+                ep
+        );
+
+        FrameLayout.LayoutParams whp =
+                new FrameLayout.LayoutParams(
+                        -1,
+                        dp(76)
+                );
+
+        whp.gravity =
+                Gravity.TOP;
+
+        whp.leftMargin =
+                dp(16);
+
+        whp.rightMargin =
+                dp(16);
+
+        whp.topMargin =
+                dp(16);
+
+        writingCard.addView(
+                writingHeader,
+                whp
+        );
+
+        bounce(expand);
+
+        expand.setOnClickListener(
+                v -> {
+
+                    bodyEdit.requestFocus();
+
+                    InputMethodManager imm =
+                            (InputMethodManager)
+                                    getSystemService(
+                                            Context.INPUT_METHOD_SERVICE
+                                    );
+
+                    if (imm != null) {
+                        imm.showSoftInput(
+                                bodyEdit,
+                                InputMethodManager
+                                        .SHOW_IMPLICIT
+                        );
+                    }
+                }
+        );
+
+        /*
+         * ONLY THIS AREA SCROLLS
+         */
+
+        ScrollView bodyScroll =
+                new ScrollView(this);
+
+        bodyScroll.setFillViewport(true);
+
+        bodyScroll.setVerticalScrollBarEnabled(
+                true
+        );
+
+        bodyScroll.setScrollbarFadingEnabled(
+                false
+        );
+
+        bodyScroll.setClipToPadding(
+                false
+        );
+
+        bodyScroll.setOverScrollMode(
+                View.OVER_SCROLL_IF_CONTENT_SCROLLS
+        );
 
         bodyEdit =
                 new EditText(this);
 
-        bodyEdit.setHint(
-                "Start writing..."
+        bodyEdit.setTextSize(
+                18
         );
-
-        bodyEdit.setTextSize(19);
 
         bodyEdit.setTextColor(
                 WHITE
         );
 
         bodyEdit.setHintTextColor(
-                Color.rgb(119, 132, 168)
+                MUTED
         );
 
         bodyEdit.setGravity(
-                Gravity.TOP | Gravity.START
+                Gravity.TOP |
+                Gravity.LEFT
+        );
+
+        bodyEdit.setHint(
+                ""
         );
 
         bodyEdit.setPadding(
                 dp(20),
-                dp(18),
-                dp(20),
-                dp(18)
+                dp(8),
+                dp(22),
+                dp(40)
+        );
+
+        bodyEdit.setInputType(
+                InputType.TYPE_CLASS_TEXT |
+                InputType.TYPE_TEXT_FLAG_MULTI_LINE |
+                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         );
 
         bodyEdit.setBackgroundColor(
                 Color.TRANSPARENT
         );
 
-        bodyEdit.setInputType(
-                android.text.InputType.TYPE_CLASS_TEXT
-                        | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
-                        | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-                );
-
-        card.addView(
+        bodyScroll.addView(
                 bodyEdit,
-                new LinearLayout.LayoutParams(
+                new ScrollView.LayoutParams(
                         -1,
-                        dp(590)
+                        -2
                 )
         );
 
-        root.addView(
-                card,
-                new LinearLayout.LayoutParams(
+        FrameLayout.LayoutParams bsp =
+                new FrameLayout.LayoutParams(
                         -1,
-                        dp(598)
+                        -1
+                );
+
+        bsp.leftMargin =
+                dp(20);
+
+        bsp.rightMargin =
+                dp(12);
+
+        bsp.topMargin =
+                dp(88);
+
+        bsp.bottomMargin =
+                dp(70);
+
+        writingCard.addView(
+                bodyScroll,
+                bsp
+        );
+
+        /*
+         * BOTTOM BAR
+         */
+
+        LinearLayout bottom =
+                new LinearLayout(this);
+
+        bottom.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        bottom.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        TextView markdown =
+                txt(
+                        "▣  Markdown supported",
+                        14,
+                        MUTED
+                );
+
+        markdown.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        LinearLayout.LayoutParams mp =
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1
+                );
+
+        bottom.addView(
+                markdown,
+                mp
+        );
+
+        countText =
+                txt(
+                        "0 words  •  0 characters",
+                        14,
+                        MUTED
+                );
+
+        countText.setGravity(
+                Gravity.CENTER
+        );
+
+        bottom.addView(
+                countText,
+                new LinearLayout.LayoutParams(
+                        dp(180),
+                        -1
                 )
+        );
+
+        FrameLayout.LayoutParams bp =
+                new FrameLayout.LayoutParams(
+                        -1,
+                        dp(58)
+                );
+
+        bp.gravity =
+                Gravity.BOTTOM;
+
+        bp.leftMargin =
+                dp(18);
+
+        bp.rightMargin =
+                dp(12);
+
+        bp.bottomMargin =
+                dp(8);
+
+        writingCard.addView(
+                bottom,
+                bp
         );
 
         bodyEdit.addTextChangedListener(
@@ -752,7 +1328,7 @@ public class EditorActivity extends Activity {
 
                     @Override
                     public void afterTextChanged(
-                            Editable s
+                            android.text.Editable e
                     ) {
                     }
                 }
@@ -763,7 +1339,7 @@ public class EditorActivity extends Activity {
     // FOLDER + TAGS
     // =========================================================
 
-    private void buildMetadata() {
+    private void buildFolderTags() {
 
         LinearLayout row =
                 new LinearLayout(this);
@@ -776,72 +1352,73 @@ public class EditorActivity extends Activity {
                 Gravity.CENTER
         );
 
-        root.addView(
-                row,
+        LinearLayout.LayoutParams rp =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(82)
-                )
+                        dp(94)
+                );
+
+        rp.topMargin =
+                dp(14);
+
+        main.addView(
+                row,
+                rp
         );
 
-        LinearLayout folderCard =
-                metadataCard(
+        LinearLayout folder =
+                metadata(
                         "📁",
-                        "Folder"
+                        "Folder",
+                        false
                 );
 
-        folderEdit =
-                (EditText)
-                        folderCard.getTag();
+        LinearLayout tags =
+                metadata(
+                        "◇",
+                        "Tags",
+                        true
+                );
 
-        LinearLayout.LayoutParams folderLp =
+        LinearLayout.LayoutParams fp =
                 new LinearLayout.LayoutParams(
                         0,
-                        dp(78),
+                        -1,
                         1
                 );
 
+        fp.rightMargin =
+                dp(6);
+
         row.addView(
-                folderCard,
-                folderLp
+                folder,
+                fp
         );
 
-        LinearLayout tagsCard =
-                metadataCard(
-                        "◇",
-                        "Tags"
-                );
-
-        tagsEdit =
-                (EditText)
-                        tagsCard.getTag();
-
-        LinearLayout.LayoutParams tagsLp =
+        LinearLayout.LayoutParams tp =
                 new LinearLayout.LayoutParams(
                         0,
-                        dp(78),
+                        -1,
                         1
                 );
 
-        tagsLp.leftMargin =
-                dp(10);
+        tp.leftMargin =
+                dp(6);
 
         row.addView(
-                tagsCard,
-                tagsLp
+                tags,
+                tp
         );
     }
 
-    private LinearLayout metadataCard(
+    private LinearLayout metadata(
             String icon,
-            String hint
+            String hint,
+            boolean purple
     ) {
 
         LinearLayout card =
-                glassCard(
-                        GLASS_2,
-                        27
-                );
+                new LinearLayout(this);
 
         card.setOrientation(
                 LinearLayout.HORIZONTAL
@@ -851,27 +1428,34 @@ public class EditorActivity extends Activity {
                 Gravity.CENTER_VERTICAL
         );
 
-        TextView iconText =
-                label(
+        card.setPadding(
+                dp(12),
+                0,
+                dp(7),
+                0
+        );
+
+        card.setBackground(
+                liquidGlass(30)
+        );
+
+        TextView iconView =
+                txt(
                         icon,
-                        23,
-                        hint.equals("Folder")
-                                ? CYAN
-                                : Color.rgb(
-                                        167,
-                                        112,
-                                        255
-                                )
+                        21,
+                        purple
+                                ? PURPLE_LIGHT
+                                : WHITE
                 );
 
-        iconText.setGravity(
+        iconView.setGravity(
                 Gravity.CENTER
         );
 
         card.addView(
-                iconText,
+                iconView,
                 new LinearLayout.LayoutParams(
-                        dp(42),
+                        dp(34),
                         -1
                 )
         );
@@ -883,24 +1467,28 @@ public class EditorActivity extends Activity {
                 hint
         );
 
-        edit.setTextSize(17);
+        edit.setTextSize(
+                14
+        );
 
         edit.setTextColor(
                 WHITE
         );
 
         edit.setHintTextColor(
-                MUTED
+                TEXT
         );
 
-        edit.setSingleLine(true);
+        edit.setSingleLine(
+                true
+        );
 
         edit.setGravity(
                 Gravity.CENTER_VERTICAL
         );
 
         edit.setPadding(
-                0,
+                dp(3),
                 0,
                 0,
                 0
@@ -909,6 +1497,12 @@ public class EditorActivity extends Activity {
         edit.setBackgroundColor(
                 Color.TRANSPARENT
         );
+
+        if (hint.equals("Folder")) {
+            folderEdit = edit;
+        } else {
+            tagsEdit = edit;
+        }
 
         card.addView(
                 edit,
@@ -920,10 +1514,10 @@ public class EditorActivity extends Activity {
         );
 
         TextView arrow =
-                label(
+                txt(
                         "›",
-                        31,
-                        LIGHT
+                        28,
+                        WHITE
                 );
 
         arrow.setGravity(
@@ -933,135 +1527,36 @@ public class EditorActivity extends Activity {
         card.addView(
                 arrow,
                 new LinearLayout.LayoutParams(
-                        dp(38),
+                        dp(25),
                         -1
                 )
         );
 
-        card.setTag(edit);
+        bounce(card);
 
-        return card;
-    }
-
-    // =========================================================
-    // ATTACHMENT
-    // =========================================================
-
-    private void buildAttachment() {
-
-        attachmentText =
-                label(
-                        "",
-                        14,
-                        LIGHT
-                );
-
-        attachmentText.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        attachmentText.setPadding(
-                dp(18),
-                0,
-                dp(18),
-                0
-        );
-
-        attachmentText.setBackground(
-                glass(
-                        Color.rgb(
-                                17,
-                                31,
-                                55
-                        ),
-                        22,
-                        BORDER
-                )
-        );
-
-        attachmentText.setVisibility(
-                View.GONE
-        );
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(52)
-                );
-
-        lp.topMargin = dp(10);
-
-        root.addView(
-                attachmentText,
-                lp
-        );
-    }
-
-    // =========================================================
-    // COUNTER
-    // =========================================================
-
-    private void buildCounter() {
-
-        countText =
-                label(
-                        "0 words  •  0 characters",
-                        14,
-                        MUTED
-                );
-
-        countText.setGravity(
-                Gravity.CENTER
-        );
-
-        root.addView(
-                countText,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(40)
-                )
-        );
-    }
-
-    // =========================================================
-    // TOOL BUTTON
-    // =========================================================
-
-    private void addTool(
-            LinearLayout parent,
-            String value,
-            float size,
-            View.OnClickListener listener
-    ) {
-
-        TextView tool =
-                glassButton(
-                        value,
-                        size
-                );
-
-        LinearLayout.LayoutParams lp =
-                new LinearLayout.LayoutParams(
-                        dp(70),
-                        dp(60)
-                );
-
-        lp.leftMargin = dp(3);
-        lp.rightMargin = dp(3);
-
-        parent.addView(
-                tool,
-                lp
-        );
-
-        tool.setOnClickListener(
+        card.setOnClickListener(
                 v -> {
 
-                    bounce(v);
+                    edit.requestFocus();
 
-                    listener.onClick(v);
+                    InputMethodManager imm =
+                            (InputMethodManager)
+                                    getSystemService(
+                                            Context.INPUT_METHOD_SERVICE
+                                    );
+
+                    if (imm != null) {
+
+                        imm.showSoftInput(
+                                edit,
+                                InputMethodManager
+                                        .SHOW_IMPLICIT
+                        );
+                    }
                 }
         );
+
+        return card;
     }
 
     // =========================================================
@@ -1081,10 +1576,8 @@ public class EditorActivity extends Activity {
                 n.title
         );
 
-        if (
-                n.body != null
-                        && !n.body.isEmpty()
-        ) {
+        if (n.body != null &&
+                !n.body.isEmpty()) {
 
             bodyEdit.setText(
                     Html.fromHtml(
@@ -1095,11 +1588,15 @@ public class EditorActivity extends Activity {
         }
 
         folderEdit.setText(
-                n.folder
+                n.folder == null
+                        ? ""
+                        : n.folder
         );
 
         tagsEdit.setText(
-                n.tags
+                n.tags == null
+                        ? ""
+                        : n.tags
         );
 
         attachmentUri =
@@ -1108,28 +1605,32 @@ public class EditorActivity extends Activity {
                         : n.attachment;
 
         updateAttachment();
+        updateCount();
     }
 
     // =========================================================
-    // SAVE
+    // CONTENT
     // =========================================================
 
     private boolean hasContent() {
 
-        return !titleEdit
-                .getText()
-                .toString()
-                .trim()
-                .isEmpty()
-
+        return
+                !titleEdit
+                        .getText()
+                        .toString()
+                        .trim()
+                        .isEmpty()
                 ||
-
                 !bodyEdit
                         .getText()
                         .toString()
                         .trim()
                         .isEmpty();
     }
+
+    // =========================================================
+    // SAVE
+    // =========================================================
 
     private void save() {
 
@@ -1150,6 +1651,12 @@ public class EditorActivity extends Activity {
                         .toString()
                         .trim();
 
+        String body =
+                Html.toHtml(
+                        bodyEdit.getText(),
+                        Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE
+                );
+
         String folder =
                 folderEdit
                         .getText()
@@ -1165,12 +1672,6 @@ public class EditorActivity extends Activity {
         if (folder.isEmpty()) {
             folder = "General";
         }
-
-        String body =
-                Html.toHtml(
-                        bodyEdit.getText(),
-                        Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE
-                );
 
         long id;
 
@@ -1235,10 +1736,8 @@ public class EditorActivity extends Activity {
 
     private void autosave() {
 
-        if (
-                noteId == -1
-                        || !hasContent()
-        ) {
+        if (noteId == -1 ||
+                !hasContent()) {
             return;
         }
 
@@ -1247,6 +1746,12 @@ public class EditorActivity extends Activity {
                         .getText()
                         .toString()
                         .trim();
+
+        String body =
+                Html.toHtml(
+                        bodyEdit.getText(),
+                        Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE
+                );
 
         String folder =
                 folderEdit
@@ -1264,12 +1769,6 @@ public class EditorActivity extends Activity {
             folder = "General";
         }
 
-        String body =
-                Html.toHtml(
-                        bodyEdit.getText(),
-                        Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE
-                );
-
         db.update(
                 noteId,
                 title,
@@ -1280,15 +1779,13 @@ public class EditorActivity extends Activity {
     }
 
     // =========================================================
-    // COUNTER
+    // COUNT
     // =========================================================
 
     private void updateCount() {
 
-        if (
-                countText == null
-                        || bodyEdit == null
-        ) {
+        if (countText == null ||
+                bodyEdit == null) {
             return;
         }
 
@@ -1304,18 +1801,20 @@ public class EditorActivity extends Activity {
         int words =
                 value.isEmpty()
                         ? 0
-                        : value.split("\\s+").length;
+                        : value.split(
+                                "\\s+"
+                        ).length;
 
         countText.setText(
-                words
-                        + " words  •  "
-                        + chars
-                        + " characters"
+                words +
+                " words  •  " +
+                chars +
+                " characters"
         );
     }
 
     // =========================================================
-    // TEXT FORMATTING
+    // FORMATTING
     // =========================================================
 
     private void applyStyle(
@@ -1328,10 +1827,8 @@ public class EditorActivity extends Activity {
         int end =
                 bodyEdit.getSelectionEnd();
 
-        if (
-                start < 0
-                        || end <= start
-        ) {
+        if (start < 0 ||
+                end <= start) {
 
             Toast.makeText(
                     this,
@@ -1360,10 +1857,8 @@ public class EditorActivity extends Activity {
         int end =
                 bodyEdit.getSelectionEnd();
 
-        if (
-                start < 0
-                        || end <= start
-        ) {
+        if (start < 0 ||
+                end <= start) {
             return;
         }
 
@@ -1385,10 +1880,8 @@ public class EditorActivity extends Activity {
         int end =
                 bodyEdit.getSelectionEnd();
 
-        if (
-                start < 0
-                        || end <= start
-        ) {
+        if (start < 0 ||
+                end <= start) {
             return;
         }
 
@@ -1402,6 +1895,10 @@ public class EditorActivity extends Activity {
                 );
     }
 
+    // =========================================================
+    // INSERT
+    // =========================================================
+
     private void insertAtCursor(
             String value
     ) {
@@ -1410,7 +1907,8 @@ public class EditorActivity extends Activity {
                 bodyEdit.getSelectionStart();
 
         if (position < 0) {
-            position = bodyEdit.length();
+            position =
+                    bodyEdit.length();
         }
 
         bodyEdit
@@ -1429,7 +1927,7 @@ public class EditorActivity extends Activity {
 
         Toast.makeText(
                 this,
-                "Undo is handled by text editing",
+                "Undo",
                 Toast.LENGTH_SHORT
         ).show();
     }
@@ -1438,7 +1936,7 @@ public class EditorActivity extends Activity {
 
         Toast.makeText(
                 this,
-                "Redo is handled by text editing",
+                "Redo",
                 Toast.LENGTH_SHORT
         ).show();
     }
@@ -1461,8 +1959,8 @@ public class EditorActivity extends Activity {
         );
 
         intent.addFlags(
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
         );
 
         startActivityForResult(
@@ -1484,12 +1982,10 @@ public class EditorActivity extends Activity {
                 data
         );
 
-        if (
-                requestCode == PICK_FILE
-                        && resultCode == RESULT_OK
-                        && data != null
-                        && data.getData() != null
-        ) {
+        if (requestCode == PICK_FILE &&
+                resultCode == RESULT_OK &&
+                data != null &&
+                data.getData() != null) {
 
             Uri uri =
                     data.getData();
@@ -1518,58 +2014,11 @@ public class EditorActivity extends Activity {
             return;
         }
 
-        if (
-                attachmentUri == null
-                        || attachmentUri.isEmpty()
-        ) {
-
-            attachmentText.setVisibility(
-                    View.GONE
-            );
+        if (attachmentUri == null ||
+                attachmentUri.isEmpty()) {
 
             return;
         }
-
-        attachmentText.setVisibility(
-                View.VISIBLE
-        );
-
-        attachmentText.setText(
-                "📎  Attachment added                         ›"
-        );
-
-        attachmentText.setOnClickListener(
-                v -> {
-
-                    try {
-
-                        Intent intent =
-                                new Intent(
-                                        Intent.ACTION_VIEW
-                                );
-
-                        intent.setData(
-                                Uri.parse(
-                                        attachmentUri
-                                )
-                        );
-
-                        intent.addFlags(
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        );
-
-                        startActivity(intent);
-
-                    } catch (Exception e) {
-
-                        Toast.makeText(
-                                this,
-                                "Cannot open attachment",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                }
-        );
     }
 
     // =========================================================
@@ -1599,9 +2048,9 @@ public class EditorActivity extends Activity {
 
         intent.putExtra(
                 Intent.EXTRA_TEXT,
-                title
-                        + "\n\n"
-                        + body
+                title +
+                "\n\n" +
+                body
         );
 
         startActivity(
@@ -1610,214 +2059,5 @@ public class EditorActivity extends Activity {
                         "Share note"
                 )
         );
-    }
-
-    // =========================================================
-    // GLASS HELPERS
-    // =========================================================
-
-    private LinearLayout glassCard(
-            int color,
-            int radius
-    ) {
-
-        LinearLayout layout =
-                new LinearLayout(this);
-
-        layout.setOrientation(
-                LinearLayout.VERTICAL
-        );
-
-        layout.setBackground(
-                glass(
-                        color,
-                        radius,
-                        BORDER
-                )
-        );
-
-        layout.setElevation(
-                dp(3)
-        );
-
-        return layout;
-    }
-
-    private GradientDrawable glass(
-            int color,
-            int radius,
-            int stroke
-    ) {
-
-        GradientDrawable drawable =
-                new GradientDrawable();
-
-        drawable.setColor(color);
-
-        drawable.setCornerRadius(
-                dp(radius)
-        );
-
-        drawable.setStroke(
-                dp(1),
-                stroke
-        );
-
-        return drawable;
-    }
-
-    private TextView label(
-            String value,
-            float size,
-            int color
-    ) {
-
-        TextView view =
-                new TextView(this);
-
-        view.setText(value);
-
-        view.setTextSize(size);
-
-        view.setTextColor(color);
-
-        view.setIncludeFontPadding(false);
-
-        return view;
-    }
-
-    private TextView glassButton(
-            String value,
-            float size
-    ) {
-
-        TextView view =
-                label(
-                        value,
-                        size,
-                        WHITE
-                );
-
-        view.setGravity(
-                Gravity.CENTER
-        );
-
-        view.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        view.setBackground(
-                glass(
-                        GLASS_3,
-                        26,
-                        BORDER
-                )
-        );
-
-        view.setElevation(
-                dp(4)
-        );
-
-        return view;
-    }
-
-    private TextView gradientButton(
-            String value,
-            float size
-    ) {
-
-        TextView view =
-                label(
-                        value,
-                        size,
-                        WHITE
-                );
-
-        view.setGravity(
-                Gravity.CENTER
-        );
-
-        view.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        GradientDrawable gradient =
-                new GradientDrawable(
-                        GradientDrawable
-                                .Orientation
-                                .LEFT_RIGHT,
-                        new int[]{
-                                BLUE,
-                                PURPLE
-                        }
-                );
-
-        gradient.setCornerRadius(
-                dp(29)
-        );
-
-        gradient.setStroke(
-                dp(1),
-                Color.rgb(
-                        106,
-                        167,
-                        255
-                )
-        );
-
-        view.setBackground(
-                gradient
-        );
-
-        view.setElevation(
-                dp(5)
-        );
-
-        return view;
-    }
-
-    // =========================================================
-    // SPACING
-    // =========================================================
-
-    private void space(
-            int value
-    ) {
-
-        View spacer =
-                new View(this);
-
-        root.addView(
-                spacer,
-                new LinearLayout.LayoutParams(
-                        1,
-                        dp(value)
-                )
-        );
-    }
-
-    // =========================================================
-    // BOUNCE
-    // =========================================================
-
-    private void bounce(
-            View view
-    ) {
-
-        view.animate()
-                .scaleX(0.92f)
-                .scaleY(0.92f)
-                .setDuration(70)
-                .withEndAction(
-                        () ->
-                                view.animate()
-                                        .scaleX(1f)
-                                        .scaleY(1f)
-                                        .setDuration(120)
-                                        .start()
-                )
-                .start();
     }
 }
