@@ -1,0 +1,47 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.rayan.noteapp-mergeDebugResources-2:/values/values.xml",
+            "map": [
+                {
+                    "source": "/data/data/com.termux/files/home/NoteApp/app/src/main/res/values/colors.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "4",
+                        "startOffsets": "57",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "116"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "4",
+                        "endColumns": "12",
+                        "endOffsets": "114"
+                    }
+                },
+                {
+                    "source": "/data/data/com.termux/files/home/NoteApp/app/src/main/res/values/styles.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "4",
+                        "startOffsets": "57",
+                        "endLines": "24",
+                        "endColumns": "12",
+                        "endOffsets": "649"
+                    },
+                    "to": {
+                        "startLines": "5",
+                        "startColumns": "4",
+                        "startOffsets": "119",
+                        "endLines": "23",
+                        "endColumns": "12",
+                        "endOffsets": "695"
+                    }
+                }
+            ]
+        }
+    ]
+}

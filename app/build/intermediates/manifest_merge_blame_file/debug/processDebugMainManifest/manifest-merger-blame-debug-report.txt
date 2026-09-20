@@ -1,0 +1,69 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.rayan.noteapp"
+4    android:versionCode="2"
+5    android:versionName="2.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+11-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:5:5-6:64
+11-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:6:9-61
+12
+13    <application
+13-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:8:5-43:19
+14        android:allowBackup="true"
+14-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:9:9-35
+15        android:debuggable="true"
+16        android:extractNativeLibs="false"
+17        android:icon="@mipmap/ic_launcher"
+17-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:12:9-43
+18        android:label="Notes"
+18-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:10:9-30
+19        android:roundIcon="@mipmap/ic_launcher_round"
+19-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:13:9-54
+20        android:supportsRtl="true"
+20-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:14:9-35
+21        android:theme="@style/AppTheme"
+21-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:11:9-40
+22        android:usesCleartextTraffic="false" >
+22-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:15:9-45
+23        <activity
+23-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:17:9-20:40
+24            android:name="com.rayan.noteapp.EditorActivity"
+24-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:18:13-43
+25            android:exported="false"
+25-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:20:13-37
+26            android:screenOrientation="portrait" />
+26-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:19:13-49
+27        <activity
+27-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:22:9-37:20
+28            android:name="com.rayan.noteapp.MainActivity"
+28-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:23:13-41
+29            android:exported="true"
+29-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:25:13-36
+30            android:screenOrientation="portrait" >
+30-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:24:13-49
+31            <intent-filter>
+31-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:27:13-35:29
+32                <action android:name="android.intent.action.MAIN" />
+32-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:29:17-30:65
+32-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:30:21-62
+33
+34                <category android:name="android.intent.category.LAUNCHER" />
+34-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:32:17-33:71
+34-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:33:21-68
+35            </intent-filter>
+36        </activity>
+37
+38        <receiver
+38-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:39:9-41:40
+39            android:name="com.rayan.noteapp.ReminderReceiver"
+39-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:40:13-45
+40            android:exported="false" />
+40-->/data/data/com.termux/files/home/NoteApp/app/src/main/AndroidManifest.xml:41:13-37
+41    </application>
+42
+43</manifest>

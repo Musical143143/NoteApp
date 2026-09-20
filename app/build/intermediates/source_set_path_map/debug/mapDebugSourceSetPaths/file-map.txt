@@ -1,0 +1,7 @@
+com.rayan.noteapp-pngs-0 /data/data/com.termux/files/home/NoteApp/app/build/generated/res/pngs/debug
+com.rayan.noteapp-resValues-1 /data/data/com.termux/files/home/NoteApp/app/build/generated/res/resValues/debug
+com.rayan.noteapp-packageDebugResources-2 /data/data/com.termux/files/home/NoteApp/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.rayan.noteapp-packageDebugResources-3 /data/data/com.termux/files/home/NoteApp/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.rayan.noteapp-debug-4 /data/data/com.termux/files/home/NoteApp/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.rayan.noteapp-debug-5 /data/data/com.termux/files/home/NoteApp/app/src/debug/res
+com.rayan.noteapp-main-6 /data/data/com.termux/files/home/NoteApp/app/src/main/res
