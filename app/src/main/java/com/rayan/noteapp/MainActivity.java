@@ -12,6 +12,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -100,6 +104,17 @@ private static final int LOCK_REQUEST = 9001;
     private static final int BORDER =
             Color.rgb(70, 95, 170);
 
+    private static final int CLOCK_HOUR_RED =
+            Color.rgb(255, 45, 55);
+
+    private static final int CLOCK_MINUTE_GREEN =
+            Color.rgb(0, 230, 118);
+
+    private static final int CLOCK_COLON_BLACK =
+            Color.rgb(255, 214, 0);
+
+    private boolean clockColonVisible = true;
+
     private static final int[] NOTE_COLORS = {
 
             Color.rgb(15, 22, 39),
@@ -138,6 +153,8 @@ private static final int LOCK_REQUEST = 9001;
 
     @Override
     protected void onResume() {
+
+        clockBlinkHandler.post(clockBlinkRunnable);
 
         super.onResume();
 
@@ -3463,18 +3480,9 @@ private static final int LOCK_REQUEST = 9001;
 
     private void updateClock() {
 
-        if (dayText == null
-                || timeText == null
-                || dateText == null) {
+        Date now = new Date();
 
-            return;
-        }
-
-        Date now =
-                new Date();
-
-        Locale locale =
-                Locale.getDefault();
+        Locale locale = Locale.getDefault();
 
         dayText.setText(
                 new SimpleDateFormat(
@@ -3483,12 +3491,67 @@ private static final int LOCK_REQUEST = 9001;
                 ).format(now)
         );
 
-        timeText.setText(
+        String currentTime =
                 new SimpleDateFormat(
                         "hh:mm a",
                         locale
-                ).format(now)
-        );
+                ).format(now);
+
+        SpannableString clock =
+                new SpannableString(currentTime);
+
+        // Hours RED
+        if (currentTime.length() >= 2) {
+
+            clock.setSpan(
+                    new ForegroundColorSpan(
+                            CLOCK_HOUR_RED
+                    ),
+                    0,
+                    2,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        // Minutes GREEN
+        if (currentTime.length() >= 5) {
+
+            clock.setSpan(
+                    new ForegroundColorSpan(
+                            CLOCK_MINUTE_GREEN
+                    ),
+                    3,
+                    5,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        // Colon: BLACK
+        if (currentTime.length() >= 3) {
+
+            clock.setSpan(
+                    new ForegroundColorSpan(
+                            clockColonVisible
+                                    ? CLOCK_COLON_BLACK
+                                    : Color.TRANSPARENT
+                    ),
+                    2,
+                    3,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+
+            clock.setSpan(
+                    new StyleSpan(
+                            Typeface.BOLD
+                    ),
+                    2,
+                    3,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        // AM/PM stays WHITE.
+        timeText.setText(clock);
 
         dateText.setText(
                 new SimpleDateFormat(
@@ -3498,9 +3561,26 @@ private static final int LOCK_REQUEST = 9001;
         );
     }
 
-    // =========================================================
-    // SELECTION
-    // =========================================================
+    
+
+    private final android.os.Handler clockBlinkHandler =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+
+    private final Runnable clockBlinkRunnable =
+            new Runnable() {
+        @Override
+        public void run() {
+
+            clockColonVisible = !clockColonVisible;
+
+            updateClock();
+
+            clockBlinkHandler.postDelayed(
+                    this,
+                    500
+            );
+        }
+    };
 
     private void toggleSelection(long id) {
 
