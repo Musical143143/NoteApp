@@ -1728,10 +1728,10 @@ private static final int LOCK_REQUEST = 9001;
 
             bounce(v);
 
+            // Long press enters selection mode.
             selectionMode = true;
 
             if (!selectedIds.contains(note.id)) {
-
                 selectedIds.add(note.id);
             }
 
@@ -3502,8 +3502,7 @@ private static final int LOCK_REQUEST = 9001;
     // SELECTION
     // =========================================================
 
-    private void toggleSelection(
-            long id) {
+    private void toggleSelection(long id) {
 
         if (selectedIds.contains(id)) {
 
@@ -3513,7 +3512,16 @@ private static final int LOCK_REQUEST = 9001;
 
             selectedIds.add(id);
         }
+
+        // If the last selected note is removed,
+        // completely exit selection mode.
+        if (selectedIds.isEmpty()) {
+
+            selectionMode = false;
+        }
     }
+
+    
 
     // =========================================================
     // DATE
