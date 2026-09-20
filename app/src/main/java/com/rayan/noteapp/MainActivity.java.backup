@@ -23,7 +23,6 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -132,8 +131,8 @@ private static final int LOCK_REQUEST = 9001;
         refresh();
 
         startClock();
-
-        lockChecked = false;
+if (AppLock.isEnabled(this)) {
+    lockChecked = false;
     }
 
     @Override
@@ -145,43 +144,6 @@ private static final int LOCK_REQUEST = 9001;
 
         if (db != null) {
             refresh();
-        }
-
-        if (AppLock.isEnabled(this) && !lockChecked) {
-
-            lockChecked = true;
-
-            Intent intent =
-                    new Intent(
-                            this,
-                            LockActivity.class
-                    );
-
-            startActivityForResult(
-                    intent,
-                    LOCK_REQUEST
-            );
-        }
-    }
-
-    @Override
-    protected void onActivityResult(
-            int requestCode,
-            int resultCode,
-            Intent data) {
-
-        super.onActivityResult(
-                requestCode,
-                resultCode,
-                data
-        );
-
-        if (
-                requestCode == LOCK_REQUEST
-                        && resultCode != RESULT_OK
-        ) {
-
-            finishAffinity();
         }
     }
 
@@ -2700,19 +2662,6 @@ private static final int LOCK_REQUEST = 9001;
 
         dialogItem(
                 box,
-                "Sort by oldest",
-                () -> {
-
-                    sort = "oldest";
-
-                    dialog.dismiss();
-
-                    refresh();
-                }
-        );
-
-        dialogItem(
-                box,
                 "Sort by title",
                 () -> {
 
@@ -2721,23 +2670,6 @@ private static final int LOCK_REQUEST = 9001;
                     dialog.dismiss();
 
                     refresh();
-                }
-        );
-
-        dialogItem(
-                box,
-                AppLock.isEnabled(this)
-                        ? "🔓 Disable App Lock"
-                        : "🔐 Enable App Lock",
-                () -> {
-
-                    dialog.dismiss();
-
-                    if (AppLock.isEnabled(this)) {
-                        showDisableLock();
-                    } else {
-                        showEnableLock();
-                    }
                 }
         );
 
@@ -2776,271 +2708,6 @@ private static final int LOCK_REQUEST = 9001;
         dialog.show();
 
         styleDialog(dialog, 0.91f);
-    }
-
-    // =========================================================
-    // APP LOCK
-    // =========================================================
-
-    private void showEnableLock() {
-
-        Dialog dialog =
-                glassDialog();
-
-        LinearLayout box =
-                dialogBox();
-
-        TextView title =
-                new TextView(this);
-
-        title.setText(
-                "🔐 Create App Lock"
-        );
-
-        title.setTextColor(WHITE);
-        title.setTextSize(19);
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        box.addView(
-                title,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(48)
-                )
-        );
-
-        EditText pin =
-                new EditText(this);
-
-        pin.setHint(
-                "4–8 digit PIN"
-        );
-
-        pin.setTextColor(WHITE);
-        pin.setHintTextColor(MUTED);
-        pin.setTextSize(18);
-
-        pin.setGravity(
-                Gravity.CENTER
-        );
-
-        pin.setInputType(
-                android.text.InputType.TYPE_CLASS_NUMBER
-                        | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        );
-
-        pin.setSingleLine(true);
-
-        pin.setBackground(
-                outline(
-                        Color.rgb(18, 25, 48),
-                        BORDER,
-                        20
-                )
-        );
-
-        box.addView(
-                pin,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(58)
-                )
-        );
-
-        TextView save =
-                miniButton("ENABLE");
-
-        LinearLayout.LayoutParams saveLp =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(44)
-                );
-
-        saveLp.topMargin = dp(12);
-
-        box.addView(
-                save,
-                saveLp
-        );
-
-        save.setOnClickListener(v -> {
-
-            bounce(v);
-
-            String value =
-                    pin.getText()
-                            .toString()
-                            .trim();
-
-            if (
-                    value.length() < 4
-                            || value.length() > 8
-            ) {
-
-                Toast.makeText(
-                        this,
-                        "PIN must be 4–8 digits",
-                        Toast.LENGTH_SHORT
-                ).show();
-
-                return;
-            }
-
-            AppLock.enable(
-                    this,
-                    value
-            );
-
-            dialog.dismiss();
-
-            Toast.makeText(
-                    this,
-                    "App Lock enabled",
-                    Toast.LENGTH_SHORT
-            ).show();
-        });
-
-        dialog.setContentView(box);
-
-        dialog.show();
-
-        styleDialog(
-                dialog,
-                0.91f
-        );
-    }
-
-    private void showDisableLock() {
-
-        Dialog dialog =
-                glassDialog();
-
-        LinearLayout box =
-                dialogBox();
-
-        TextView title =
-                new TextView(this);
-
-        title.setText(
-                "🔓 Disable App Lock"
-        );
-
-        title.setTextColor(WHITE);
-        title.setTextSize(19);
-
-        title.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
-
-        box.addView(
-                title,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(48)
-                )
-        );
-
-        EditText pin =
-                new EditText(this);
-
-        pin.setHint(
-                "Current PIN"
-        );
-
-        pin.setTextColor(WHITE);
-        pin.setHintTextColor(MUTED);
-        pin.setTextSize(18);
-
-        pin.setGravity(
-                Gravity.CENTER
-        );
-
-        pin.setInputType(
-                android.text.InputType.TYPE_CLASS_NUMBER
-                        | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-        );
-
-        pin.setSingleLine(true);
-
-        pin.setBackground(
-                outline(
-                        Color.rgb(18, 25, 48),
-                        BORDER,
-                        20
-                )
-        );
-
-        box.addView(
-                pin,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(58)
-                )
-        );
-
-        TextView disable =
-                miniButton("DISABLE");
-
-        LinearLayout.LayoutParams disableLp =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(44)
-                );
-
-        disableLp.topMargin = dp(12);
-
-        box.addView(
-                disable,
-                disableLp
-        );
-
-        disable.setOnClickListener(v -> {
-
-            bounce(v);
-
-            if (
-                    AppLock.verify(
-                            this,
-                            pin.getText()
-                                    .toString()
-                    )
-            ) {
-
-                AppLock.disable(this);
-
-                dialog.dismiss();
-
-                Toast.makeText(
-                        this,
-                        "App Lock disabled",
-                        Toast.LENGTH_SHORT
-                ).show();
-
-            } else {
-
-                pin.setText("");
-
-                Toast.makeText(
-                        this,
-                        "Wrong PIN",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
-
-        dialog.setContentView(box);
-
-        dialog.show();
-
-        styleDialog(
-                dialog,
-                0.91f
-        );
     }
 
     // =========================================================

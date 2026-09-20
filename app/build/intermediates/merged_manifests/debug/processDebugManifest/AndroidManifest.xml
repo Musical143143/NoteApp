@@ -21,6 +21,10 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false" >
         <activity
+            android:name="com.rayan.noteapp.LockActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name="com.rayan.noteapp.EditorActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
